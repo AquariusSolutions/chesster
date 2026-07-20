@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "346188478020",
+    "firebase_url": "https://chess-solutions-f8a5b-default-rtdb.firebaseio.com",
+    "project_id": "chess-solutions-f8a5b",
+    "storage_bucket": "chess-solutions-f8a5b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:346188478020:android:e4368beabf8ca8aea3ae11",
+        "android_client_info": {
+          "package_name": "com.aquariussolutions.chesster"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "346188478020-5l0vq52pfi35jahkkrfuguqms8d9p335.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAWZN8Il7EzEbQ50W_AG-Tjzkv0TTw5Sqk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "346188478020-5l0vq52pfi35jahkkrfuguqms8d9p335.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "346188478020-04n7mmf0dgni0rrec3p2mf10hhsr7atc.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.aquariussolutions.chesster"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

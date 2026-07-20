@@ -1,18 +1,60 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useColorScheme } from 'react-native';
-
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+import { persistor, store } from "@/store";
+import { useAppSelector } from "@/store/hooks";
+import { useResolvedScheme } from "@/hooks/use-resolved-scheme";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+import {
+  DarkTheme,
+  DefaultTheme,
+  Stack,
+  ThemeProvider,
+} from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+import { useEffect } from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { Provider } from "react-redux";
+import { PersistGate } from "redux-persist/integration/react";
 
 SplashScreen.preventAutoHideAsync();
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+export default function RootLayout() {
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <Provider store={store}>
+        <PersistGate loading={null} persistor={persistor}>
+          <ThemedApp />
+        </PersistGate>
+      </Provider>
+    </GestureHandlerRootView>
+  );
+}
+
+function ThemedApp() {
+  const scheme = useResolvedScheme();
+  return (
+    <ThemeProvider value={scheme === "dark" ? DarkTheme : DefaultTheme}>
+      <BottomSheetModalProvider>
+        <RootNavigator />
+      </BottomSheetModalProvider>
     </ThemeProvider>
+  );
+}
+
+function RootNavigator() {
+  const initializing = useAppSelector((s) => s.auth.initializing);
+
+  useEffect(() => {
+    if (!initializing) SplashScreen.hideAsync();
+  }, [initializing]);
+
+  // Hold the splash until Firebase reports the current auth state.
+  if (initializing) return null;
+
+  // The board (app) is always home; sign in / sign up is an optional modal
+  // reached from the drawer. Guests are signed in anonymously in the background.
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(app)" />
+      <Stack.Screen name="(auth)" options={{ presentation: "modal" }} />
+    </Stack>
   );
 }
