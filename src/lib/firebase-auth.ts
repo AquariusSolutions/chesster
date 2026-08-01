@@ -89,14 +89,27 @@ export function signInAnonymously() {
   return fbSignInAnonymously(getAuth());
 }
 
-export async function signInWithGoogle() {
+/**
+ * Runs the Google sign-in flow and returns a Firebase credential.
+ *
+ * The access token is fetched explicitly rather than left out: RN Firebase
+ * bridges a missing access token to native as an empty string, and Android's
+ * GoogleAuthCredential rejects an empty one (it only accepts absent or
+ * non-empty), failing with "accessToken cannot be empty".
+ */
+async function getGoogleCredential() {
   await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
   const response = await GoogleSignin.signIn();
   const idToken = response.data?.idToken;
   if (!idToken) throw new Error('Google sign-in was cancelled.');
+  const { accessToken } = await GoogleSignin.getTokens();
+  return GoogleAuthProvider.credential(idToken, accessToken);
+}
+
+export async function signInWithGoogle() {
+  const credential = await getGoogleCredential();
 
   const auth = getAuth();
-  const credential = GoogleAuthProvider.credential(idToken);
   const current = auth.currentUser;
 
   if (current?.isAnonymous) {
@@ -123,10 +136,24 @@ export async function signOut() {
 
 /** Set the current user's photo and return the refreshed user projection. */
 export async function updateProfilePhoto(photoURL: string): Promise<AuthUser | null> {
-  const current = getAuth().currentUser;
+  const auth = getAuth();
+  const current = auth.currentUser;
   if (!current) return null;
   await updateProfile(current, { photoURL });
-  return toAuthUser(current);
+  // updateProfile swaps a fresh User onto the auth instance rather than
+  // mutating the one captured above, so re-read it — the old reference still
+  // carries the old photo. It also emits `onUserChanged`, not
+  // `onAuthStateChanged`, so our listener won't report this either.
+  return toAuthUser(auth.currentUser);
+}
+
+/** Clear the current user's photo so the UI falls back to their initial. */
+export async function clearProfilePhoto(): Promise<AuthUser | null> {
+  const auth = getAuth();
+  const current = auth.currentUser;
+  if (!current) return null;
+  await updateProfile(current, { photoURL: null });
+  return toAuthUser(auth.currentUser);
 }
 
 export async function deleteAccount(): Promise<void> {
@@ -154,11 +181,8 @@ export async function reauthenticateWithPassword(password: string): Promise<void
 
 /** Re-authenticate a Google user via a fresh Google sign-in. */
 export async function reauthenticateWithGoogle(): Promise<void> {
-  await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
-  const response = await GoogleSignin.signIn();
-  const idToken = response.data?.idToken;
-  if (!idToken) throw new Error('Google sign-in was cancelled.');
+  const credential = await getGoogleCredential();
   const current = getAuth().currentUser;
   if (!current) throw new Error('Not signed in.');
-  await reauthenticateWithCredential(current, GoogleAuthProvider.credential(idToken));
+  await reauthenticateWithCredential(current, credential);
 }

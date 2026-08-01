@@ -84,6 +84,10 @@ const authSlice = createSlice({
         return { payload: { uri } };
       },
     },
+    avatarRemoveRequested(state) {
+      state.photoUpdating = true;
+      state.error = null;
+    },
 
     // Results.
     authError(state, action: PayloadAction<string>) {
@@ -114,6 +118,7 @@ export const {
   reauthRequired,
   reauthCancelled,
   avatarUpdateRequested,
+  avatarRemoveRequested,
   authError,
   authStateChanged,
   clearAuthError,

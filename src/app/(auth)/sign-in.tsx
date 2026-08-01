@@ -3,15 +3,10 @@ import { useEffect, useState } from "react";
 import { KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import {
-  ACCENT,
-  Field,
-  PrimaryButton,
-  SecondaryButton,
-} from "@/components/auth-ui";
+import { Field, PrimaryButton, SecondaryButton } from "@/components/auth-ui";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { Spacing } from "@/constants/theme";
+import { OnPrimary, Spacing } from "@/constants/theme";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   emailSignInRequested,
@@ -116,7 +111,7 @@ export default function SignInScreen() {
               <Link
                 href="/sign-up"
                 replace
-                style={[styles.link, { color: ACCENT }]}
+                style={[styles.link, { color: OnPrimary }]}
               >
                 Sign up
               </Link>

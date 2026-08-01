@@ -26,6 +26,17 @@ export const Colors = {
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 
+/**
+ * Brand primary — light gray. Used selectively as the accent *surface* color:
+ * active selectors, primary buttons, avatars, active tab. Because it is very
+ * light, always pair it with `OnPrimary` for any text/icon so it stays legible.
+ */
+export const Primary = '#D3D3D3';
+
+/** Foreground (text/icons) placed on `Primary` surfaces, or accent text/icons
+ * that sit on light backgrounds where `Primary` itself would be invisible. */
+export const OnPrimary = '#1A2842';
+
 export const Fonts = Platform.select({
   ios: {
     /** iOS `UIFontDescriptorSystemDesignDefault` */

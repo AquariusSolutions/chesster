@@ -15,21 +15,69 @@ import {
   PieceType,
 } from './chess';
 
-export type Difficulty = 'easy' | 'medium' | 'hard';
+/** A level from `MIN_LEVEL` to `MAX_LEVEL`, chosen with the slider in Settings. */
+export type Difficulty = number;
 
-/** Search depth per difficulty. Deeper = stronger but slower to move. */
-export const DIFFICULTY_DEPTH: Record<Difficulty, number> = {
-  easy: 2,
-  medium: 3,
-  hard: 4,
-};
+export const MIN_LEVEL = 1;
+export const MAX_LEVEL = 10;
+export const DEFAULT_LEVEL = 5;
 
-/** Centipawn jitter added at the root so a level plays varied, beatable moves. */
-const DIFFICULTY_JITTER: Record<Difficulty, number> = {
-  easy: 70,
-  medium: 20,
-  hard: 0,
-};
+interface LevelConfig {
+  /** Search depth. Deeper = stronger but slower to move. */
+  depth: number;
+  /** Centipawn noise at the root, so equal-ish moves vary between games. */
+  jitter: number;
+  /** Chance of skipping the search and playing a random legal move instead. */
+  blunder: number;
+}
+
+/**
+ * Depth alone is a poor difficulty dial: even a depth-1 alpha-beta search takes
+ * every free piece and never hangs one, so low levels still felt sharp. The
+ * `blunder` chance is what actually gives a human chances — it makes the engine
+ * miss things the way a beginner does. Jitter only shades between near-equal
+ * moves (it is below a pawn from level 4 up, so it never gives material away).
+ */
+const LEVELS: LevelConfig[] = [
+  { depth: 1, jitter: 150, blunder: 0.55 }, // 1
+  { depth: 1, jitter: 120, blunder: 0.4 }, //  2
+  { depth: 2, jitter: 100, blunder: 0.28 }, // 3
+  { depth: 2, jitter: 80, blunder: 0.18 }, //  4
+  { depth: 2, jitter: 60, blunder: 0.1 }, //   5
+  { depth: 3, jitter: 45, blunder: 0.05 }, //  6
+  { depth: 3, jitter: 30, blunder: 0.02 }, //  7
+  { depth: 3, jitter: 15, blunder: 0 }, //     8
+  { depth: 4, jitter: 10, blunder: 0 }, //     9
+  { depth: 4, jitter: 0, blunder: 0 }, //     10
+];
+
+/** Levels this app shipped before the slider replaced the three-way control. */
+const LEGACY_LEVELS: Record<string, Difficulty> = { easy: 2, medium: 5, hard: 9 };
+
+export function clampLevel(level: number): Difficulty {
+  return Math.min(MAX_LEVEL, Math.max(MIN_LEVEL, Math.round(level)));
+}
+
+/**
+ * Coerce a persisted value to a valid level. Settings and saved games from
+ * before the slider hold 'easy' | 'medium' | 'hard', so they are mapped across
+ * rather than silently reset.
+ */
+export function normalizeLevel(value: unknown): Difficulty {
+  if (typeof value === 'number' && Number.isFinite(value)) return clampLevel(value);
+  if (typeof value === 'string' && value in LEGACY_LEVELS) return LEGACY_LEVELS[value];
+  return DEFAULT_LEVEL;
+}
+
+/** Short name for a level, shown under the slider and in game history. */
+export function levelLabel(level: Difficulty): string {
+  const l = clampLevel(level);
+  if (l <= 2) return 'Beginner';
+  if (l <= 4) return 'Casual';
+  if (l <= 6) return 'Club';
+  if (l <= 8) return 'Strong';
+  return 'Master';
+}
 
 const PIECE_VALUE: Record<PieceType, number> = {
   p: 100,
@@ -185,5 +233,12 @@ export function bestMove(state: GameState, depth: number, jitter = 0): Move | nu
 
 /** Convenience wrapper: choose a move for a difficulty level. */
 export function chooseMove(state: GameState, difficulty: Difficulty): Move | null {
-  return bestMove(state, DIFFICULTY_DEPTH[difficulty], DIFFICULTY_JITTER[difficulty]);
+  const { depth, jitter, blunder } = LEVELS[normalizeLevel(difficulty) - 1];
+
+  if (blunder > 0 && Math.random() < blunder) {
+    const moves = allLegalMoves(state);
+    if (moves.length === 0) return null;
+    return moves[Math.floor(Math.random() * moves.length)];
+  }
+  return bestMove(state, depth, jitter);
 }

@@ -3,6 +3,7 @@ import { call, fork, put, select, take, takeLatest } from 'redux-saga/effects';
 
 import {
   AuthUser,
+  clearProfilePhoto,
   configureGoogleSignIn,
   deleteAccount,
   getPrimaryProvider,
@@ -17,12 +18,13 @@ import {
   toAuthUser,
   updateProfilePhoto,
 } from '@/lib/firebase-auth';
-import { uploadAvatar } from '@/lib/firebase-storage';
+import { deleteAvatar, uploadAvatar } from '@/lib/firebase-storage';
 
 import {
   anonymousSignInRequested,
   authError,
   authStateChanged,
+  avatarRemoveRequested,
   avatarUpdateRequested,
   deleteAccountRequested,
   emailSignInRequested,
@@ -80,8 +82,10 @@ function* watchAuthState() {
       // board is always playable and games/settings still sync.
       try {
         yield call(signInAnonymously);
-      } catch {
-        // Offline — the game still works locally; sync resumes when online.
+      } catch (e) {
+        // Offline, or the Anonymous provider is disabled in the Firebase
+        // console. The game still works locally; sync resumes when online.
+        console.warn('[auth] guest sign-in failed:', e);
       }
     }
   }
@@ -141,6 +145,20 @@ function* handleAvatarUpdate(action: ReturnType<typeof avatarUpdateRequested>) {
   }
 }
 
+function* handleAvatarRemove() {
+  try {
+    const uid: string | undefined = yield select((s: RootState) => s.auth.user?.uid);
+    if (!uid) return;
+    const updated: AuthUser | null = yield call(clearProfilePhoto);
+    if (updated) yield put(authStateChanged(updated));
+    // Clear the profile first — a stored file nobody points at is harmless,
+    // an avatar pointing at a deleted file is a broken image.
+    yield call(deleteAvatar, uid);
+  } catch (e) {
+    yield put(authError(errorMessage(e)));
+  }
+}
+
 function hasCode(e: unknown, code: string): boolean {
   return !!e && typeof e === 'object' && 'code' in e && (e as { code?: string }).code === code;
 }
@@ -191,5 +209,6 @@ export default function* authSaga() {
   yield takeLatest(anonymousSignInRequested.type, handleAnonymousSignIn);
   yield takeLatest(signOutRequested.type, handleSignOut);
   yield takeLatest(avatarUpdateRequested.type, handleAvatarUpdate);
+  yield takeLatest(avatarRemoveRequested.type, handleAvatarRemove);
   yield takeLatest(deleteAccountRequested.type, handleDeleteAccount);
 }

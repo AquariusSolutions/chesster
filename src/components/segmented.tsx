@@ -1,9 +1,10 @@
 import { Pressable, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
-import { Spacing } from "@/constants/theme";
+import { OnPrimary, Primary, Spacing } from "@/constants/theme";
 
-export const ACCENT = "#3C87F7";
+/** Accent color used across the app. Now the light-gray brand primary. */
+export const ACCENT = Primary;
 
 /** A labeled segmented control: the active option is filled with the accent. */
 export function Segmented<T extends string>({
@@ -74,6 +75,6 @@ const styles = StyleSheet.create({
     backgroundColor: ACCENT,
   },
   segmentTextActive: {
-    color: "#FFFFFF",
+    color: OnPrimary,
   },
 });

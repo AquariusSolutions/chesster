@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 import { BoardThemeKey } from '@/constants/board-themes';
-import { Difficulty } from '@/lib/ai';
+import { clampLevel, DEFAULT_LEVEL, Difficulty, normalizeLevel } from '@/lib/ai';
 import { PieceColor } from '@/lib/chess';
 
 export type ThemePreference = 'system' | 'light' | 'dark';
@@ -16,7 +16,7 @@ export interface SettingsSliceState {
 
 const initial: SettingsSliceState = {
   humanColor: 'w',
-  difficulty: 'medium',
+  difficulty: DEFAULT_LEVEL,
   boardTheme: 'ocean',
   themePreference: 'system',
 };
@@ -29,7 +29,7 @@ const settingsSlice = createSlice({
       state.humanColor = action.payload;
     },
     setDifficulty(state, action: PayloadAction<Difficulty>) {
-      state.difficulty = action.payload;
+      state.difficulty = clampLevel(action.payload);
     },
     setBoardTheme(state, action: PayloadAction<BoardThemeKey>) {
       state.boardTheme = action.payload;
@@ -39,7 +39,10 @@ const settingsSlice = createSlice({
     },
     /** Bulk-apply settings loaded from Firestore (only provided keys). */
     settingsLoaded(state, action: PayloadAction<Partial<SettingsSliceState>>) {
-      return { ...state, ...action.payload };
+      const next = { ...state, ...action.payload };
+      // Documents written before the slider hold a difficulty string.
+      next.difficulty = normalizeLevel(next.difficulty);
+      return next;
     },
   },
 });

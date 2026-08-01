@@ -1,9 +1,6 @@
-import { Ionicons } from "@expo/vector-icons";
-import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   Modal,
   Pressable,
@@ -12,6 +9,7 @@ import {
   View,
 } from "react-native";
 
+import { AvatarPicker } from "@/components/avatar-picker";
 import { Field, PrimaryButton } from "@/components/auth-ui";
 import { ACCENT, Segmented } from "@/components/segmented";
 import { ThemedText } from "@/components/themed-text";
@@ -22,6 +20,7 @@ import {
 } from "@/constants/board-themes";
 import { Spacing } from "@/constants/theme";
 import {
+  avatarRemoveRequested,
   avatarUpdateRequested,
   deleteAccountRequested,
   reauthCancelled,
@@ -33,6 +32,14 @@ import {
   setThemePreference,
   ThemePreference,
 } from "@/store/settingsSlice";
+
+/** Square crop at modest quality — the avatar renders at 96pt. */
+const PHOTO_OPTIONS: ImagePicker.ImagePickerOptions = {
+  mediaTypes: ["images"],
+  allowsEditing: true,
+  aspect: [1, 1],
+  quality: 0.7,
+};
 
 const THEME_OPTIONS: { value: ThemePreference; label: string }[] = [
   { value: "system", label: "System" },
@@ -59,7 +66,25 @@ export default function ProfileScreen() {
   const subtitle = user?.isAnonymous ? "Playing as guest" : user?.email ?? "";
   const initial = name.charAt(0).toUpperCase();
 
-  const pickPhoto = async () => {
+  const applyResult = (result: ImagePicker.ImagePickerResult) => {
+    if (!result.canceled) {
+      dispatch(avatarUpdateRequested(result.assets[0].uri));
+    }
+  };
+
+  const takePhoto = async () => {
+    const perm = await ImagePicker.requestCameraPermissionsAsync();
+    if (!perm.granted) {
+      Alert.alert(
+        "Permission needed",
+        "Allow camera access to take a profile picture.",
+      );
+      return;
+    }
+    applyResult(await ImagePicker.launchCameraAsync(PHOTO_OPTIONS));
+  };
+
+  const pickFromLibrary = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
       Alert.alert(
@@ -68,15 +93,7 @@ export default function ProfileScreen() {
       );
       return;
     }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.7,
-    });
-    if (!result.canceled) {
-      dispatch(avatarUpdateRequested(result.assets[0].uri));
-    }
+    applyResult(await ImagePicker.launchImageLibraryAsync(PHOTO_OPTIONS));
   };
 
   const confirmDelete = () => {
@@ -98,23 +115,18 @@ export default function ProfileScreen() {
     <ThemedView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
-          <Pressable onPress={pickPhoto} disabled={photoUpdating}>
-            {user?.photoURL ? (
-              <Image source={{ uri: user.photoURL }} style={styles.avatar} />
-            ) : (
-              <View style={[styles.avatar, styles.avatarFallback]}>
-                <ThemedText style={styles.avatarInitial}>{initial}</ThemedText>
-              </View>
-            )}
-            <View style={styles.cameraBadge}>
-              <Ionicons name="camera" size={14} color="#FFFFFF" />
-            </View>
-            {photoUpdating ? (
-              <View style={[styles.avatar, styles.avatarOverlay]}>
-                <ActivityIndicator color="#FFFFFF" />
-              </View>
-            ) : null}
-          </Pressable>
+          <AvatarPicker
+            photoURL={user?.photoURL}
+            initial={initial}
+            updating={photoUpdating}
+            onTakePhoto={takePhoto}
+            onChooseFromLibrary={pickFromLibrary}
+            onRemovePhoto={
+              user?.photoURL
+                ? () => dispatch(avatarRemoveRequested())
+                : undefined
+            }
+          />
           <ThemedText type="subtitle">{name}</ThemedText>
           {subtitle ? (
             <ThemedText type="small" themeColor="textSecondary">
@@ -259,42 +271,6 @@ const styles = StyleSheet.create({
   header: {
     alignItems: "center",
     gap: Spacing.one,
-  },
-  avatar: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    marginBottom: Spacing.two,
-  },
-  avatarFallback: {
-    backgroundColor: ACCENT,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarInitial: {
-    color: "#FFFFFF",
-    fontSize: 32,
-    fontWeight: "700",
-  },
-  avatarOverlay: {
-    position: "absolute",
-    top: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.4)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  cameraBadge: {
-    position: "absolute",
-    right: -2,
-    bottom: Spacing.two - 2,
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: ACCENT,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 2,
-    borderColor: "#FFFFFF",
   },
   section: {
     gap: Spacing.three,

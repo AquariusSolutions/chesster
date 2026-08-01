@@ -6,7 +6,7 @@ import { newGame } from '../gameSlice';
 import { resetTimer, tick } from '../timerSlice';
 import aiSaga from './aiSaga';
 import authSaga from './authSaga';
-import historySaga from './historySaga';
+import matchSaga from './matchSaga';
 import settingsSaga from './settingsSaga';
 import type { RootState } from '../index';
 
@@ -37,7 +37,7 @@ export default function* rootSaga() {
     authSaga(),
     aiSaga(),
     settingsSaga(),
-    historySaga(),
+    matchSaga(),
     fork(clockSaga),
     resetClockOnNewGame(),
   ]);

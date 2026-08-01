@@ -1,11 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 
 import { ChessBoard } from "@/components/chess-board";
+import { LevelSlider } from "@/components/level-slider";
 import { ACCENT, Segmented } from "@/components/segmented";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { BOARD_THEMES } from "@/constants/board-themes";
-import { Spacing } from "@/constants/theme";
+import { OnPrimary, Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 import { Difficulty } from "@/lib/ai";
 import {
@@ -70,12 +71,6 @@ const GLYPHS: Record<PieceType, string> = {
 };
 
 const PROMOTION_CHOICES: PieceType[] = ["q", "r", "b", "n"];
-
-const DIFFICULTY_LABELS: { value: Difficulty; label: string }[] = [
-  { value: "easy", label: "Easy" },
-  { value: "medium", label: "Medium" },
-  { value: "hard", label: "Hard" },
-];
 
 function statusText(status: GameStatus, turn: PieceColor): string {
   const other = turn === "w" ? "Black" : "White";
@@ -363,6 +358,10 @@ function SettingsSheet({
     <BottomSheetModal
       ref={sheetRef}
       enableDynamicSizing
+      // The sheet's content pan gesture activates as soon as a touch moves,
+      // which stole every drag from the level slider (taps still landed).
+      // Dragging the handle and tapping the backdrop still dismiss the sheet.
+      enableContentPanningGesture={false}
       backdropComponent={renderBackdrop}
       backgroundStyle={{ backgroundColor: theme.backgroundElement }}
       handleIndicatorStyle={styles.handleIndicator}
@@ -383,10 +382,9 @@ function SettingsSheet({
           ]}
           onChange={onChooseSide}
         />
-        <Segmented
+        <LevelSlider
           label="Level"
           value={difficulty}
-          options={DIFFICULTY_LABELS}
           onChange={onChooseDifficulty}
         />
 
@@ -462,7 +460,7 @@ const styles = StyleSheet.create({
     backgroundColor: ACCENT,
   },
   buttonText: {
-    color: "#FFFFFF",
+    color: OnPrimary,
     fontWeight: "700",
     fontSize: 15,
   },

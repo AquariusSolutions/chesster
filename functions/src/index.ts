@@ -4,8 +4,9 @@ import * as functions from "firebase-functions/v1";
 admin.initializeApp();
 
 /**
- * When a user account is deleted, remove their Firestore data
- * (users/{uid} and its `games` subcollection) and their avatar in Storage.
+ * When a user account is deleted, remove their Realtime Database data
+ * (users/{uid} — settings, games and any match in progress) and their avatar
+ * in Storage.
  *
  * Running this server-side guarantees cleanup even if the client is offline or
  * the delete was interrupted, so no client-side cleanup is needed.
@@ -13,8 +14,8 @@ admin.initializeApp();
 export const onUserDeleted = functions.auth.user().onDelete(async (user) => {
   const { uid } = user;
 
-  // Recursively delete the user document and all of its subcollections.
-  await admin.firestore().recursiveDelete(admin.firestore().doc(`users/${uid}`));
+  // Removing the subtree takes settings, games and currentMatch with it.
+  await admin.database().ref(`users/${uid}`).remove();
 
   // Remove the avatar if one was uploaded.
   try {

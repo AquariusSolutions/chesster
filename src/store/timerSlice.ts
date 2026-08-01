@@ -1,4 +1,4 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export interface TimerSliceState {
   /** Seconds elapsed in the current game. */
@@ -17,8 +17,12 @@ const timerSlice = createSlice({
     resetTimer(state) {
       state.elapsed = 0;
     },
+    /** Adopt the clock of a game picked back up from history. */
+    setElapsed(state, action: PayloadAction<number>) {
+      state.elapsed = action.payload;
+    },
   },
 });
 
-export const { tick, resetTimer } = timerSlice.actions;
+export const { tick, resetTimer, setElapsed } = timerSlice.actions;
 export default timerSlice.reducer;

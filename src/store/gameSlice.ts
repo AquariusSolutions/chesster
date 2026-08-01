@@ -1,6 +1,15 @@
 import { createSlice, current, nanoid, PayloadAction } from '@reduxjs/toolkit';
 
-import { applyMove, GameState, initialState, Move, moveToSan, PieceColor } from '@/lib/chess';
+import {
+  allLegalMoves,
+  applyMove,
+  GameState,
+  initialState,
+  Move,
+  moveToSan,
+  PieceColor,
+  PlayedMove,
+} from '@/lib/chess';
 
 export interface HistoryEntry {
   state: GameState;
@@ -10,8 +19,10 @@ export interface HistoryEntry {
 }
 
 export interface GameSliceState {
-  /** Stable id for this game, used as the Firestore document id. */
+  /** Stable id for this game, used as its key in the Realtime Database. */
   id: string;
+  /** Unix ms the game started. Fixed for its lifetime, so history stays ordered. */
+  createdAt: number;
   history: HistoryEntry[];
   /** Last move to slide into place (computer/tap moves); null for drags. */
   animatedMove: { from: number; to: number } | null;
@@ -23,6 +34,7 @@ function freshHistory(): HistoryEntry[] {
 
 const initial: GameSliceState = {
   id: nanoid(),
+  createdAt: Date.now(),
   history: freshHistory(),
   animatedMove: null,
 };
@@ -31,10 +43,17 @@ const gameSlice = createSlice({
   name: 'game',
   initialState: initial,
   reducers: {
-    newGame(state) {
-      state.id = nanoid();
-      state.history = freshHistory();
-      state.animatedMove = null;
+    // The id and timestamp come from `prepare` so the reducer stays pure.
+    newGame: {
+      reducer(state, action: PayloadAction<{ id: string; createdAt: number }>) {
+        state.id = action.payload.id;
+        state.createdAt = action.payload.createdAt;
+        state.history = freshHistory();
+        state.animatedMove = null;
+      },
+      prepare() {
+        return { payload: { id: nanoid(), createdAt: Date.now() } };
+      },
     },
 
     commitMove(state, action: PayloadAction<{ move: Move; animate: boolean }>) {
@@ -52,6 +71,34 @@ const gameSlice = createSlice({
     },
 
     /**
+     * Adopt a stored game — synced from another device, or picked back up from
+     * history — replaying its move list against the engine to rebuild history.
+     */
+    gameRestored(
+      state,
+      action: PayloadAction<{ id: string; createdAt: number; moves: PlayedMove[] }>,
+    ) {
+      const history = freshHistory();
+      for (const played of action.payload.moves) {
+        const before = history[history.length - 1].state;
+        const move = allLegalMoves(before).find(
+          (m) =>
+            m.from === played.from &&
+            m.to === played.to &&
+            m.promotion === played.promotion,
+        );
+        // A move that no longer fits means the list is stale or corrupt; keep
+        // the prefix that replayed cleanly rather than dropping the game.
+        if (!move) break;
+        history.push({ state: applyMove(before, move), move, san: moveToSan(before, move) });
+      }
+      state.id = action.payload.id;
+      state.createdAt = action.payload.createdAt;
+      state.history = history;
+      state.animatedMove = null;
+    },
+
+    /**
      * Step back to the last position where it is the human's move, so undoing
      * against the computer rolls back its reply and your move together.
      */
@@ -66,5 +113,5 @@ const gameSlice = createSlice({
   },
 });
 
-export const { newGame, commitMove, undo } = gameSlice.actions;
+export const { newGame, commitMove, gameRestored, undo } = gameSlice.actions;
 export default gameSlice.reducer;

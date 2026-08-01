@@ -10,10 +10,11 @@ import {
 } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
-import { Spacing } from "@/constants/theme";
+import { OnPrimary, Primary, Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 
-export const ACCENT = "#3C87F7";
+/** Accent color used across the app. Now the light-gray brand primary. */
+export const ACCENT = Primary;
 
 export function Field({
   label,
@@ -63,7 +64,7 @@ export function PrimaryButton({
           ]}
         >
           {loading ? (
-            <ActivityIndicator color="#FFFFFF" />
+            <ActivityIndicator color={OnPrimary} />
           ) : (
             <Text style={styles.primaryText}>{label}</Text>
           )}
@@ -167,7 +168,7 @@ const styles = StyleSheet.create({
     backgroundColor: ACCENT,
   },
   primaryText: {
-    color: "#FFFFFF",
+    color: OnPrimary,
     fontWeight: "700",
     fontSize: 16,
   },

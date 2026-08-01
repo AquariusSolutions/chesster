@@ -4,7 +4,7 @@ import { delay, put, select, takeLatest } from 'redux-saga/effects';
 import { chooseMove } from '@/lib/ai';
 import { getStatus } from '@/lib/chess';
 
-import { commitMove, newGame } from '../gameSlice';
+import { commitMove, gameRestored, newGame } from '../gameSlice';
 import { setHumanColor } from '../settingsSlice';
 import type { RootState } from '../index';
 
@@ -38,7 +38,7 @@ function* maybePlayComputerMove() {
 
 export default function* aiSaga() {
   yield takeLatest(
-    [commitMove.type, newGame.type, setHumanColor.type, REHYDRATE],
+    [commitMove.type, newGame.type, gameRestored.type, setHumanColor.type, REHYDRATE],
     maybePlayComputerMove,
   );
 }

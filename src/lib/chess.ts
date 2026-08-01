@@ -28,6 +28,16 @@ export interface Move {
   isDoublePush?: boolean;
 }
 
+/**
+ * A move reduced to what a replay needs — the engine re-derives the piece,
+ * capture and castling/en-passant flags from the position it is applied to.
+ */
+export interface PlayedMove {
+  from: number;
+  to: number;
+  promotion?: PieceType;
+}
+
 export interface CastlingRights {
   wk: boolean;
   wq: boolean;

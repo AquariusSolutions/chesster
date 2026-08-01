@@ -9,9 +9,8 @@ import { useRouter } from "expo-router";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { ACCENT } from "@/components/segmented";
 import { ThemedText } from "@/components/themed-text";
-import { Spacing } from "@/constants/theme";
+import { OnPrimary, Primary, Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 import { useAppSelector } from "@/store/hooks";
 
@@ -106,7 +105,7 @@ export default function DrawerContent(props: DrawerContentComponentProps) {
             label="Create account"
             labelStyle={styles.accent}
             icon={({ size }) => (
-              <Ionicons name="person-add-outline" size={size} color={ACCENT} />
+              <Ionicons name="person-add-outline" size={size} color={OnPrimary} />
             )}
             onPress={() => goToAuth("/sign-up")}
           />
@@ -133,13 +132,16 @@ const styles = StyleSheet.create({
     borderRadius: 24,
   },
   avatarFallback: {
-    backgroundColor: ACCENT,
+    backgroundColor: Primary,
     alignItems: "center",
     justifyContent: "center",
   },
   avatarInitial: {
-    color: "#FFFFFF",
+    color: OnPrimary,
     fontSize: 22,
+    lineHeight: 26,
+    textAlign: "center",
+    includeFontPadding: false,
     fontWeight: "700",
   },
   headerText: {
@@ -155,6 +157,6 @@ const styles = StyleSheet.create({
     borderTopColor: "rgba(127, 127, 127, 0.3)",
   },
   accent: {
-    color: ACCENT,
+    color: OnPrimary,
   },
 });

@@ -16,7 +16,9 @@
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#1A2842",
-        "foregroundImage": "./assets/images/android-icon-foreground.png"
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false
     },
@@ -39,7 +41,9 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow Chesster to access your photos to set a profile picture."
+          "photosPermission": "Allow Chesster to access your photos to set a profile picture.",
+          "cameraPermission": "Allow Chesster to use your camera to take a profile picture.",
+          "microphonePermission": false
         }
       ],
       [
@@ -56,7 +60,7 @@
             "forceStaticLinking": [
               "RNFBApp",
               "RNFBAuth",
-              "RNFBFirestore",
+              "RNFBDatabase",
               "RNFBStorage"
             ]
           }
