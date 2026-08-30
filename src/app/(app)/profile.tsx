@@ -1,5 +1,5 @@
 import * as ImagePicker from "expo-image-picker";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Alert,
   Modal,
@@ -22,6 +22,7 @@ import { Spacing } from "@/constants/theme";
 import {
   avatarRemoveRequested,
   avatarUpdateRequested,
+  clearAuthError,
   deleteAccountRequested,
   reauthCancelled,
   signOutRequested,
@@ -57,6 +58,15 @@ export default function ProfileScreen() {
   const themePreference = useAppSelector((s) => s.settings.themePreference);
 
   const [reauthPassword, setReauthPassword] = useState("");
+
+  // Surface errors that aren't already shown inline in the re-auth modal —
+  // notably a profile photo rejected by NSFW moderation.
+  useEffect(() => {
+    if (errorText && !reauthNeeded) {
+      Alert.alert("Update failed", errorText);
+      dispatch(clearAuthError());
+    }
+  }, [errorText, reauthNeeded, dispatch]);
 
   const isGuest = !user || user.isAnonymous;
   const name =
@@ -180,18 +190,22 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        <View style={styles.section}>
+        {/*
+          Account actions are for signed-in users only; guests have none. Hidden
+          via display (not unmounted) so the screen's view tree stays
+          structurally constant when auth state flips underneath the auth modal,
+          which otherwise crashes Fabric on the New Architecture.
+        */}
+        <View style={[styles.section, isGuest && styles.hidden]}>
           <ThemedText type="smallBold" themeColor="textSecondary">
             ACCOUNT
           </ThemedText>
-          {!isGuest ? (
-            <Pressable
-              onPress={() => dispatch(signOutRequested())}
-              style={({ pressed }) => [styles.signOutButton, pressed && styles.dim]}
-            >
-              <ThemedText type="smallBold">Sign out</ThemedText>
-            </Pressable>
-          ) : null}
+          <Pressable
+            onPress={() => dispatch(signOutRequested())}
+            style={({ pressed }) => [styles.signOutButton, pressed && styles.dim]}
+          >
+            <ThemedText type="smallBold">Sign out</ThemedText>
+          </Pressable>
           <Pressable
             onPress={confirmDelete}
             style={({ pressed }) => [styles.deleteButton, pressed && styles.dim]}
@@ -294,6 +308,9 @@ const styles = StyleSheet.create({
   },
   dim: {
     opacity: 0.6,
+  },
+  hidden: {
+    display: "none",
   },
   modalBackdrop: {
     flex: 1,

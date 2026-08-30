@@ -1,5 +1,6 @@
 import { persistor, store } from "@/store";
 import { useAppSelector } from "@/store/hooks";
+import { TermsGate } from "@/components/terms-gate";
 import { useResolvedScheme } from "@/hooks/use-resolved-scheme";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import {
@@ -52,9 +53,21 @@ function RootNavigator() {
   // The board (app) is always home; sign in / sign up is an optional modal
   // reached from the drawer. Guests are signed in anonymously in the background.
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(app)" />
-      <Stack.Screen name="(auth)" options={{ presentation: "modal" }} />
-    </Stack>
+    <>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(app)" />
+        <Stack.Screen name="(auth)" options={{ presentation: "modal" }} />
+        <Stack.Screen
+          name="terms"
+          options={{
+            presentation: "modal",
+            headerShown: true,
+            title: "Terms & Conditions",
+          }}
+        />
+      </Stack>
+      {/* Blocking overlay until the current Terms version is accepted. */}
+      <TermsGate />
+    </>
   );
 }

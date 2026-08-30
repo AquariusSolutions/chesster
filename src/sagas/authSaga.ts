@@ -19,6 +19,11 @@ import {
   updateProfilePhoto,
 } from '@/lib/firebase-auth';
 import { deleteAvatar, uploadAvatar } from '@/lib/firebase-storage';
+import {
+  clearAvatarModeration,
+  ModerationResult,
+  waitForAvatarModeration,
+} from '@/lib/realtime-db';
 
 import {
   anonymousSignInRequested,
@@ -32,8 +37,8 @@ import {
   googleSignInRequested,
   reauthRequired,
   signOutRequested,
-} from '../authSlice';
-import type { RootState } from '../index';
+} from '@/store/authSlice';
+import type { RootState } from '@/store/index';
 
 function errorMessage(e: unknown): string {
   const code =
@@ -111,7 +116,10 @@ function* handleEmailSignUp(action: ReturnType<typeof emailSignUpRequested>) {
 
 function* handleGoogleSignIn() {
   try {
-    yield call(signInWithGoogle);
+    // Google linking backfills the profile photo/name, which updateProfile does
+    // not broadcast via onAuthStateChanged — so push the result into the store.
+    const updated: AuthUser | null = yield call(signInWithGoogle);
+    if (updated) yield put(authStateChanged(updated));
   } catch (e) {
     yield put(authError(errorMessage(e)));
   }
@@ -137,9 +145,35 @@ function* handleAvatarUpdate(action: ReturnType<typeof avatarUpdateRequested>) {
   try {
     const uid: string | undefined = yield select((s: RootState) => s.auth.user?.uid);
     if (!uid) return;
+
+    // Clear any previous verdict first so the value we wait for below is the one
+    // the Cloud Function produces for *this* upload.
+    yield call(clearAvatarModeration, uid);
+
+    // Upload to Storage — this triggers the `moderateAvatar` Cloud Function,
+    // which runs SafeSearch and writes a verdict to users/{uid}/avatarModeration.
     const url: string = yield call(uploadAvatar, uid, action.payload.uri);
+
+    // Only commit the photo once it has passed moderation. Fail closed: a
+    // rejection or a timeout (function/Vision unavailable) discards the upload
+    // rather than risk storing or showing disallowed content.
+    const verdict: ModerationResult = yield call(waitForAvatarModeration, uid);
+    if (verdict.status !== 'approved') {
+      yield call(deleteAvatar, uid);
+      yield call(clearAvatarModeration, uid);
+      yield put(
+        authError(
+          verdict.status === 'rejected'
+            ? "That photo can't be used. Please choose a different picture."
+            : "We couldn't verify that photo. Please try again.",
+        ),
+      );
+      return;
+    }
+
     const updated: AuthUser | null = yield call(updateProfilePhoto, url);
     if (updated) yield put(authStateChanged(updated));
+    yield call(clearAvatarModeration, uid);
   } catch (e) {
     yield put(authError(errorMessage(e)));
   }

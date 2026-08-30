@@ -12,19 +12,20 @@ import {
   REHYDRATE,
 } from 'redux-persist';
 import type { PersistedState } from 'redux-persist';
-import createSagaMiddleware from 'redux-saga';
 
+import { runRootSaga, sagaMiddleware } from '@/sagas';
 import { normalizeLevel } from '@/lib/ai';
 
 import authReducer from './authSlice';
 import gameReducer from './gameSlice';
-import rootSaga from './sagas/rootSaga';
+import legalReducer from './legalSlice';
 import settingsReducer from './settingsSlice';
 import timerReducer from './timerSlice';
 
 const rootReducer = combineReducers({
   auth: authReducer,
   game: gameReducer,
+  legal: legalReducer,
   settings: settingsReducer,
   timer: timerReducer,
 });
@@ -56,11 +57,10 @@ const persistConfig = {
   migrate: createMigrate(migrations),
   storage: AsyncStorage,
   throttle: 1000, // batch writes; the timer ticks every second
-  whitelist: ['game', 'settings', 'timer'],
+  whitelist: ['game', 'settings', 'timer', 'legal'],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
-const sagaMiddleware = createSagaMiddleware();
 
 export const store = configureStore({
   reducer: persistedReducer,
@@ -73,7 +73,7 @@ export const store = configureStore({
     }).concat(sagaMiddleware),
 });
 
-sagaMiddleware.run(rootSaga);
+runRootSaga();
 
 export const persistor = persistStore(store);
 

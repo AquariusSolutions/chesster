@@ -4,9 +4,9 @@ import { delay, put, select, takeLatest } from 'redux-saga/effects';
 import { chooseMove } from '@/lib/ai';
 import { getStatus } from '@/lib/chess';
 
-import { commitMove, gameRestored, newGame } from '../gameSlice';
-import { setHumanColor } from '../settingsSlice';
-import type { RootState } from '../index';
+import { commitMove, gameRestored, newGame } from '@/store/gameSlice';
+import { setHumanColor } from '@/store/settingsSlice';
+import type { RootState } from '@/store/index';
 
 /** How long the computer "thinks" before playing, so its move feels deliberate. */
 const THINK_MS = 450;

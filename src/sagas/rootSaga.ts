@@ -2,13 +2,14 @@ import { all, delay, fork, put, select, takeLatest } from 'redux-saga/effects';
 
 import { getStatus } from '@/lib/chess';
 
-import { newGame } from '../gameSlice';
-import { resetTimer, tick } from '../timerSlice';
+import { newGame } from '@/store/gameSlice';
+import { resetTimer, tick } from '@/store/timerSlice';
 import aiSaga from './aiSaga';
 import authSaga from './authSaga';
+import legalSaga from './legalSaga';
 import matchSaga from './matchSaga';
 import settingsSaga from './settingsSaga';
-import type { RootState } from '../index';
+import type { RootState } from '@/store/index';
 
 /**
  * Advance the game clock once per second, but only after the first move has
@@ -37,6 +38,7 @@ export default function* rootSaga() {
     authSaga(),
     aiSaga(),
     settingsSaga(),
+    legalSaga(),
     matchSaga(),
     fork(clockSaga),
     resetClockOnNewGame(),

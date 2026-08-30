@@ -11,10 +11,10 @@ import {
   UNFINISHED,
 } from '@/lib/realtime-db';
 
-import { authStateChanged } from '../authSlice';
-import { commitMove, gameRestored, newGame, undo } from '../gameSlice';
-import { setElapsed } from '../timerSlice';
-import type { RootState } from '../index';
+import { authStateChanged } from '@/store/authSlice';
+import { commitMove, gameRestored, newGame, undo } from '@/store/gameSlice';
+import { setElapsed } from '@/store/timerSlice';
+import type { RootState } from '@/store/index';
 
 /** Moves land in bursts (yours, then the computer's reply) — batch the writes. */
 const SYNC_DEBOUNCE_MS = 1000;

@@ -2,7 +2,7 @@ import { call, debounce, put, select, takeLatest } from 'redux-saga/effects';
 
 import { loadUserSettings, saveUserSettings } from '@/lib/realtime-db';
 
-import { authStateChanged } from '../authSlice';
+import { authStateChanged } from '@/store/authSlice';
 import {
   setBoardTheme,
   setDifficulty,
@@ -10,8 +10,8 @@ import {
   setThemePreference,
   settingsLoaded,
   SettingsSliceState,
-} from '../settingsSlice';
-import type { RootState } from '../index';
+} from '@/store/settingsSlice';
+import type { RootState } from '@/store/index';
 
 /** Push the current settings to Firestore (debounced) whenever they change. */
 function* syncSettings() {

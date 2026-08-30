@@ -26,9 +26,13 @@ export default function SignInScreen() {
 
   const canSubmit = email.trim().length > 0 && password.length > 0 && !loading;
 
-  // A real (non-guest) sign-in succeeded — return to the board.
+  // A real (non-guest) sign-in succeeded — return to the board. Defer the
+  // dismissal by a frame so it doesn't share a commit with the re-render the
+  // auth-state change triggers underneath.
   useEffect(() => {
-    if (user && !user.isAnonymous) router.back();
+    if (!user || user.isAnonymous) return;
+    const id = requestAnimationFrame(() => router.back());
+    return () => cancelAnimationFrame(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 

@@ -23,9 +23,13 @@ export default function SignUpScreen() {
   const [confirm, setConfirm] = useState("");
   const [localError, setLocalError] = useState<string | null>(null);
 
-  // Account created and signed in — return to the board.
+  // Account created and signed in — return to the board. Defer the dismissal
+  // by a frame so it doesn't share a commit with the re-render the auth-state
+  // change triggers underneath.
   useEffect(() => {
-    if (user && !user.isAnonymous) router.back();
+    if (!user || user.isAnonymous) return;
+    const id = requestAnimationFrame(() => router.back());
+    return () => cancelAnimationFrame(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 

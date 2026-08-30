@@ -106,7 +106,7 @@ async function getGoogleCredential() {
   return GoogleAuthProvider.credential(idToken, accessToken);
 }
 
-export async function signInWithGoogle() {
+export async function signInWithGoogle(): Promise<AuthUser | null> {
   const credential = await getGoogleCredential();
 
   const auth = getAuth();
@@ -115,14 +115,39 @@ export async function signInWithGoogle() {
   if (current?.isAnonymous) {
     try {
       // New Google account: upgrade the guest in place, keeping their uid/data.
-      return await linkWithCredential(current, credential);
+      await linkWithCredential(current, credential);
+      return backfillGoogleProfile();
     } catch (e) {
       // The Google account already exists — fall through and sign into it
       // (a separate account, so guest data stays with the guest).
       if (!hasErrorCode(e, 'auth/credential-already-in-use')) throw e;
     }
   }
-  return signInWithCredential(auth, credential);
+  await signInWithCredential(auth, credential);
+  return backfillGoogleProfile();
+}
+
+/**
+ * Copy the display name and photo from the Google provider onto the top-level
+ * user profile when they're missing. Firebase fills these in on a fresh Google
+ * sign-in, but NOT when linking Google to an existing anonymous guest — which
+ * is this app's normal path — so without this the Google picture never shows.
+ * `updateProfile` emits `onUserChanged` (not `onAuthStateChanged`), so the
+ * caller pushes the returned user into the store itself.
+ */
+async function backfillGoogleProfile(): Promise<AuthUser | null> {
+  const auth = getAuth();
+  const current = auth.currentUser;
+  if (!current) return null;
+  if (current.photoURL && current.displayName) return toAuthUser(current);
+
+  const google = current.providerData.find((p) => p.providerId === 'google.com');
+  const photoURL = current.photoURL ?? google?.photoURL ?? undefined;
+  const displayName = current.displayName ?? google?.displayName ?? undefined;
+  if (photoURL !== undefined || displayName !== undefined) {
+    await updateProfile(current, { photoURL, displayName });
+  }
+  return toAuthUser(auth.currentUser);
 }
 
 export async function signOut() {

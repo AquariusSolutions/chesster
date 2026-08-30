@@ -17,6 +17,7 @@ import {
   get,
   getDatabase,
   limitToLast,
+  onValue,
   orderByChild,
   query,
   ref,
@@ -107,4 +108,60 @@ export async function saveCurrentGameId(uid: string, id: string) {
 export async function loadCurrentGameId(uid: string): Promise<string | null> {
   const snap = await get(userRef(uid, 'currentGameId'));
   return snap.exists() ? (snap.val() as string) : null;
+}
+
+/** Record that the user accepted a given Terms & Conditions version. */
+export async function saveTermsAcceptance(
+  uid: string,
+  acceptance: { version: number; acceptedAt: number },
+) {
+  await set(userRef(uid, 'legal/terms'), acceptance);
+}
+
+/**
+ * Avatar moderation verdict written by the `moderateAvatar` Cloud Function
+ * after it runs SafeSearch on the uploaded image.
+ */
+export type AvatarModeration =
+  | { status: 'approved'; at?: number }
+  | { status: 'rejected'; at?: number; reason?: string };
+
+/** Terminal verdict, or 'timeout' when none arrived within the wait window. */
+export type ModerationResult = AvatarModeration | { status: 'timeout' };
+
+/** Clear any previous verdict so the next upload's result is unambiguous. */
+export async function clearAvatarModeration(uid: string): Promise<void> {
+  await remove(userRef(uid, 'avatarModeration'));
+}
+
+/**
+ * Wait for the moderation verdict for a freshly uploaded avatar. Callers must
+ * `clearAvatarModeration` *before* uploading, so any value that appears here is
+ * produced by the Cloud Function for this upload — no timestamp comparison is
+ * needed. Resolves to 'timeout' (fail-closed: treat as not approved) if the
+ * function does not write a verdict in time.
+ */
+export function waitForAvatarModeration(
+  uid: string,
+  timeoutMs = 25000,
+): Promise<ModerationResult> {
+  const reference = userRef(uid, 'avatarModeration');
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = (result: ModerationResult) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      unsubscribe();
+      resolve(result);
+    };
+    const timer = setTimeout(() => finish({ status: 'timeout' }), timeoutMs);
+    const unsubscribe = onValue(reference, (snap) => {
+      if (!snap.exists()) return; // our own clear, or not written yet
+      const value = snap.val() as AvatarModeration;
+      if (value?.status === 'approved' || value?.status === 'rejected') {
+        finish(value);
+      }
+    });
+  });
 }

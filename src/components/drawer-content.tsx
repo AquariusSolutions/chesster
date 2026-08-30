@@ -89,28 +89,44 @@ export default function DrawerContent(props: DrawerContentComponentProps) {
           )}
           onPress={() => props.navigation.navigate("profile")}
         />
+        <DrawerItem
+          label="Terms & Conditions"
+          labelStyle={{ color: theme.text }}
+          icon={({ size }) => (
+            <Ionicons name="document-text-outline" size={size} color={theme.text} />
+          )}
+          onPress={() => {
+            props.navigation.closeDrawer();
+            router.push("/terms");
+          }}
+        />
       </View>
 
-      {isGuest ? (
-        <View style={styles.authItems}>
-          <DrawerItem
-            label="Sign in"
-            labelStyle={{ color: theme.text }}
-            icon={({ size }) => (
-              <Ionicons name="log-in-outline" size={size} color={theme.text} />
-            )}
-            onPress={() => goToAuth("/sign-in")}
-          />
-          <DrawerItem
-            label="Create account"
-            labelStyle={styles.accent}
-            icon={({ size }) => (
-              <Ionicons name="person-add-outline" size={size} color={OnPrimary} />
-            )}
-            onPress={() => goToAuth("/sign-up")}
-          />
-        </View>
-      ) : null}
+      {/*
+        Always mounted; only its visibility toggles with auth state. Mounting
+        or unmounting this block on sign-in mutates the drawer's view tree while
+        the auth modal is dismissing on top of it, which crashes Fabric on the
+        New Architecture ("addViewAt: failed to insert view"). Toggling
+        `display` keeps the native hierarchy structurally constant instead.
+      */}
+      <View style={[styles.authItems, !isGuest && styles.hidden]}>
+        <DrawerItem
+          label="Sign in"
+          labelStyle={{ color: theme.text }}
+          icon={({ size }) => (
+            <Ionicons name="log-in-outline" size={size} color={theme.text} />
+          )}
+          onPress={() => goToAuth("/sign-in")}
+        />
+        <DrawerItem
+          label="Create account"
+          labelStyle={styles.accent}
+          icon={({ size }) => (
+            <Ionicons name="person-add-outline" size={size} color={OnPrimary} />
+          )}
+          onPress={() => goToAuth("/sign-up")}
+        />
+      </View>
     </DrawerContentScrollView>
   );
 }
@@ -155,6 +171,9 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.two,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: "rgba(127, 127, 127, 0.3)",
+  },
+  hidden: {
+    display: "none",
   },
   accent: {
     color: OnPrimary,
