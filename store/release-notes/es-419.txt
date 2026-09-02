@@ -1,0 +1,5 @@
+Te damos la bienvenida a Chesster: la app para mejorar tu ajedrez.
+
+Resuelve problemas, consulta tu historial de soluciones y sigue tu progreso. Inicia sesión con Google para mantener todo sincronizado.
+
+Nuestra primera versión. ¡Gracias por jugar!

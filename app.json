@@ -2,6 +2,7 @@
   "expo": {
     "name": "chesster",
     "slug": "chesster",
+    "owner": "aquarius-solutions-srl",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -31,7 +32,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#05060f",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
@@ -72,6 +73,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "45256bd2-be78-42fa-9332-d28ebc42d175"
+      }
     }
   }
 }

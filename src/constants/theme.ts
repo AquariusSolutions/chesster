@@ -16,22 +16,22 @@ export const Colors = {
     textSecondary: '#60646C',
   },
   dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
+    text: '#e8ecff',
+    background: '#05060f',
+    backgroundElement: '#141834',
+    backgroundSelected: '#1e2450',
+    textSecondary: '#9aa3d0',
   },
 } as const;
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 
 /**
- * Brand primary — light gray. Used selectively as the accent *surface* color:
- * active selectors, primary buttons, avatars, active tab. Because it is very
- * light, always pair it with `OnPrimary` for any text/icon so it stays legible.
+ * Brand primary — Aquarius Solutions aqua. Used selectively as the accent
+ * *surface* color: active selectors, primary buttons, avatars, active tab.
+ * Always pair it with `OnPrimary` for any text/icon so it stays legible.
  */
-export const Primary = '#D3D3D3';
+export const Primary = '#22d3ee';
 
 /** Foreground (text/icons) placed on `Primary` surfaces, or accent text/icons
  * that sit on light backgrounds where `Primary` itself would be invisible. */

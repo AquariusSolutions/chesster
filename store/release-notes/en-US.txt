@@ -1,0 +1,5 @@
+Welcome to Chesster — the app to sharpen your chess.
+
+Solve puzzles, review your solving history, and track your progress. Sign in with Google to keep everything in sync.
+
+Our first release. Thanks for playing!

@@ -1,0 +1,9 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <!-- single-color silhouette in adaptive safe zone; system tints it -->
+  <g transform="translate(512,512) scale(0.7) translate(-512,-512)" fill="#ffffff">
+    <circle cx="512" cy="322" r="128"/>
+    <ellipse cx="512" cy="452" rx="112" ry="34"/>
+    <path d="M 449 452 C 430 545, 392 640, 360 724 L 664 724 C 632 640, 594 545, 575 452 Z"/>
+    <rect x="338" y="712" width="348" height="150" rx="34"/>
+  </g>
+</svg>

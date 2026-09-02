@@ -1,0 +1,52 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1b2a4a"/>
+      <stop offset="0.55" stop-color="#0b1024"/>
+      <stop offset="1" stop-color="#05060f"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.42" r="0.55">
+      <stop offset="0" stop-color="#22d3ee" stop-opacity="0.42"/>
+      <stop offset="1" stop-color="#22d3ee" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="pawn" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.5" stop-color="#d7f7ff"/>
+      <stop offset="1" stop-color="#22d3ee"/>
+    </linearGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+  </defs>
+
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+
+  <!-- faint checkerboard corner motif -->
+  <g fill="#22d3ee" opacity="0.06">
+    <rect x="0" y="0" width="128" height="128"/>
+    <rect x="128" y="128" width="128" height="128"/>
+    <rect x="896" y="768" width="128" height="128"/>
+    <rect x="768" y="896" width="128" height="128"/>
+  </g>
+
+  <rect width="1024" height="1024" fill="url(#glow)"/>
+
+  <!-- drop shadow -->
+  <g transform="translate(0,26)" fill="#02030a" opacity="0.55" filter="url(#soft)">
+    <circle cx="512" cy="322" r="128"/>
+    <ellipse cx="512" cy="452" rx="112" ry="34"/>
+    <path d="M 449 452 C 430 545, 392 640, 360 724 L 664 724 C 632 640, 594 545, 575 452 Z"/>
+    <rect x="338" y="712" width="348" height="150" rx="34"/>
+  </g>
+
+  <!-- pawn -->
+  <g fill="url(#pawn)">
+    <circle cx="512" cy="322" r="128"/>
+    <ellipse cx="512" cy="452" rx="112" ry="34"/>
+    <path d="M 449 452 C 430 545, 392 640, 360 724 L 664 724 C 632 640, 594 545, 575 452 Z"/>
+    <rect x="338" y="712" width="348" height="150" rx="34"/>
+  </g>
+
+  <!-- top gloss highlight on head -->
+  <ellipse cx="470" cy="278" rx="46" ry="30" fill="#ffffff" opacity="0.5"/>
+</svg>

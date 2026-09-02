@@ -1,5 +1,5 @@
 import { router, useFocusEffect } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -12,26 +12,28 @@ import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeabl
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { Spacing } from "@/constants/theme";
+import { Primary, Spacing } from "@/constants/theme";
 import { levelLabel, normalizeLevel } from "@/lib/ai";
-import { deleteGame, loadGames, SavedGame, UNFINISHED } from "@/lib/realtime-db";
+import {
+  computeChessIq,
+  computeRecord,
+  gameOutcome,
+  Outcome,
+} from "@/lib/insights";
+import { deleteGame, loadGames, SavedGame } from "@/lib/realtime-db";
 import { gameRestored, newGame } from "@/store/gameSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setElapsed } from "@/store/timerSlice";
 
+const OUTCOME_LABEL: Record<Outcome, { text: string; color: string }> = {
+  win: { text: "Win", color: "#2E9E5B" },
+  loss: { text: "Loss", color: "#E24242" },
+  draw: { text: "Draw", color: "#8894A3" },
+  playing: { text: "Playing", color: "#208AEF" },
+};
+
 function outcome(game: SavedGame): { text: string; color: string } {
-  if (game.result === UNFINISHED) {
-    return { text: "Playing", color: "#208AEF" };
-  }
-  if (game.result === "checkmate") {
-    // At checkmate the side to move is the one mated (the loser).
-    const loser = game.moves.length % 2 === 0 ? "w" : "b";
-    const won = loser !== game.humanColor;
-    return won
-      ? { text: "Win", color: "#2E9E5B" }
-      : { text: "Loss", color: "#E24242" };
-  }
-  return { text: "Draw", color: "#8894A3" };
+  return OUTCOME_LABEL[gameOutcome(game)];
 }
 
 export default function HistoryScreen() {
@@ -41,6 +43,14 @@ export default function HistoryScreen() {
   const [games, setGames] = useState<SavedGame[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const summary = useMemo(
+    () =>
+      games && games.length
+        ? { record: computeRecord(games), iq: computeChessIq(games) }
+        : null,
+    [games],
+  );
 
   const load = useCallback(async () => {
     if (!uid) return;
@@ -83,7 +93,7 @@ export default function HistoryScreen() {
 
   const resume = useCallback(
     (game: SavedGame) => {
-      if (game.result !== UNFINISHED) return;
+      if (gameOutcome(game) !== "playing") return;
       dispatch(
         gameRestored({
           id: game.id,
@@ -126,6 +136,7 @@ export default function HistoryScreen() {
         data={games ?? []}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
+        ListHeaderComponent={summary ? <SummaryHeader {...summary} /> : null}
         refreshControl={
           <RefreshControl refreshing={loading} onRefresh={load} />
         }
@@ -134,6 +145,54 @@ export default function HistoryScreen() {
         )}
       />
     </ThemedView>
+  );
+}
+
+function SummaryHeader({
+  record,
+  iq,
+}: {
+  record: ReturnType<typeof computeRecord>;
+  iq: ReturnType<typeof computeChessIq>;
+}) {
+  return (
+    <ThemedView type="backgroundElement" style={styles.summary}>
+      <View style={styles.iqBlock}>
+        <ThemedText type="small" themeColor="textSecondary">
+          Chess IQ
+        </ThemedText>
+        <ThemedText style={[styles.iqValue, { color: Primary }]}>
+          {iq.score ?? "—"}
+        </ThemedText>
+        <ThemedText type="small" themeColor="textSecondary">
+          {iq.provisional && iq.score !== null ? `${iq.tier} · provisional` : iq.tier}
+        </ThemedText>
+      </View>
+      <View style={styles.recordBlock}>
+        <Stat label="Wins" value={record.wins} color="#2E9E5B" />
+        <Stat label="Draws" value={record.draws} color="#8894A3" />
+        <Stat label="Losses" value={record.losses} color="#E24242" />
+      </View>
+    </ThemedView>
+  );
+}
+
+function Stat({
+  label,
+  value,
+  color,
+}: {
+  label: string;
+  value: number;
+  color: string;
+}) {
+  return (
+    <View style={styles.stat}>
+      <ThemedText style={[styles.statValue, { color }]}>{value}</ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        {label}
+      </ThemedText>
+    </View>
   );
 }
 
@@ -147,7 +206,7 @@ function GameRow({
   onResume: (game: SavedGame) => void;
 }) {
   const o = outcome(item);
-  const unfinished = item.result === UNFINISHED;
+  const unfinished = gameOutcome(item) === "playing";
   // Records written before games carried a timestamp have no `createdAt`.
   const date = Number.isFinite(item.createdAt)
     ? new Date(item.createdAt).toLocaleDateString()
@@ -198,6 +257,37 @@ const styles = StyleSheet.create({
   list: {
     padding: Spacing.three,
     gap: Spacing.two,
+  },
+  summary: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: Spacing.three,
+    borderRadius: Spacing.two,
+    marginBottom: Spacing.two,
+    gap: Spacing.three,
+  },
+  iqBlock: {
+    alignItems: "center",
+    paddingRight: Spacing.three,
+    borderRightWidth: StyleSheet.hairlineWidth,
+    borderRightColor: "#8894A3",
+  },
+  iqValue: {
+    fontSize: 34,
+    fontWeight: "800",
+    lineHeight: 38,
+  },
+  recordBlock: {
+    flex: 1,
+    flexDirection: "row",
+    justifyContent: "space-around",
+  },
+  stat: {
+    alignItems: "center",
+  },
+  statValue: {
+    fontSize: 22,
+    fontWeight: "800",
   },
   row: {
     flexDirection: "row",

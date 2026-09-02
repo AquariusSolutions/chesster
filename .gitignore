@@ -33,6 +33,11 @@ yarn-error.*
 # local env files
 .env*.local
 
+# secrets / service account keys
+*-service-account*.json
+chess-solutions-*.json
+credentials/
+
 # typescript
 *.tsbuildinfo
 
