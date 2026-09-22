@@ -23,6 +23,22 @@
           }
         },
         {
+          "client_id": "346188478020-7mqmktj6h7i0jf50fii17oif8icjmggs.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.aquariussolutions.chesster",
+            "certificate_hash": "05a12f91a0e8366d052a095e5e593b297ebd2e4b"
+          }
+        },
+        {
+          "client_id": "346188478020-msjst72r0tonftukkikou4ve3su0std8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.aquariussolutions.chesster",
+            "certificate_hash": "3f73e17b2dafc7f923de33201d2989568d1f384e"
+          }
+        },
+        {
           "client_id": "346188478020-v4s2lvh6bo4ghk7pkbs7pogk4u9d7vq0.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
