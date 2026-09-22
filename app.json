@@ -68,7 +68,13 @@
         }
       ],
       "expo-image",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "./plugins/withGooglePlayGames",
+        {
+          "appId": "182854539214"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

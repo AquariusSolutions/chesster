@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "346188478020-03cf4vrbvfko0srd3qlmg3e6ki4dhucl.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.aquariussolutions.chesster",
+            "certificate_hash": "f3eb23234ddc6106856a8b571e8b7d0b7b342b09"
+          }
+        },
+        {
           "client_id": "346188478020-v4s2lvh6bo4ghk7pkbs7pogk4u9d7vq0.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
