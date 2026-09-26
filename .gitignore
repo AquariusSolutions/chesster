@@ -49,3 +49,6 @@ example
 
 .agents/
 .claude/
+
+# Firebase CLI cache
+.firebase/
