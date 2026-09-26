@@ -31,6 +31,14 @@
           }
         },
         {
+          "client_id": "346188478020-bdjnci8181ocs1ldg67obvrmt8qhacb1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.aquariussolutions.chesster",
+            "certificate_hash": "64e866b40608fb5e6856af863eab79650777603a"
+          }
+        },
+        {
           "client_id": "346188478020-msjst72r0tonftukkikou4ve3su0std8.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
