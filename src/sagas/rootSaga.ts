@@ -1,6 +1,7 @@
-import { all, delay, fork, put, select, takeLatest } from 'redux-saga/effects';
+import { all, call, delay, fork, put, select, takeLatest } from 'redux-saga/effects';
 
 import { getStatus } from '@/lib/chess';
+import { initFirebase } from '@/lib/firebase-init';
 
 import { newGame } from '@/store/gameSlice';
 import { resetTimer, tick } from '@/store/timerSlice';
@@ -34,6 +35,8 @@ function* resetClockOnNewGame() {
 }
 
 export default function* rootSaga() {
+  // Must finish before any saga touches Firebase (a no-op on native).
+  yield call(initFirebase);
   yield all([
     authSaga(),
     aiSaga(),
