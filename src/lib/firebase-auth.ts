@@ -20,17 +20,13 @@ import {
   signOut as fbSignOut,
   updateProfile,
 } from '@react-native-firebase/auth';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { configureGoogleSignIn, getGoogleTokens, googleSignOut } from '@/lib/google-signin';
 
 function hasErrorCode(e: unknown, code: string): boolean {
   return (
     !!e && typeof e === 'object' && 'code' in e && (e as { code?: string }).code === code
   );
 }
-
-// Web OAuth client id (client_type 3) from google-services.json — required so
-// Google sign-in returns an ID token Firebase can exchange for a credential.
-const WEB_CLIENT_ID = '346188478020-5l0vq52pfi35jahkkrfuguqms8d9p335.apps.googleusercontent.com';
 
 /** The fields we read off a Firebase user (structurally compatible with both
  *  the modular and namespaced RN Firebase user types). */
@@ -62,9 +58,7 @@ export function toAuthUser(user: FirebaseUserLike | null): AuthUser | null {
   };
 }
 
-export function configureGoogleSignIn() {
-  GoogleSignin.configure({ webClientId: WEB_CLIENT_ID });
-}
+export { configureGoogleSignIn };
 
 /** Subscribe to auth changes; returns an unsubscribe function. */
 export function subscribeToAuth(callback: (user: FirebaseUserLike | null) => void) {
@@ -89,21 +83,11 @@ export function signInAnonymously() {
   return fbSignInAnonymously(getAuth());
 }
 
-/**
- * Runs the Google sign-in flow and returns a Firebase credential.
- *
- * The access token is fetched explicitly rather than left out: RN Firebase
- * bridges a missing access token to native as an empty string, and Android's
- * GoogleAuthCredential rejects an empty one (it only accepts absent or
- * non-empty), failing with "accessToken cannot be empty".
- */
+/** Runs the platform's Google sign-in flow and returns a Firebase credential. */
 async function getGoogleCredential() {
-  await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
-  const response = await GoogleSignin.signIn();
-  const idToken = response.data?.idToken;
-  if (!idToken) throw new Error('Google sign-in was cancelled.');
-  const { accessToken } = await GoogleSignin.getTokens();
-  return GoogleAuthProvider.credential(idToken, accessToken);
+  const tokens = await getGoogleTokens();
+  if (!tokens) throw new Error('Google sign-in was cancelled.');
+  return GoogleAuthProvider.credential(tokens.idToken, tokens.accessToken);
 }
 
 export async function signInWithGoogle(): Promise<AuthUser | null> {
@@ -151,11 +135,7 @@ async function backfillGoogleProfile(): Promise<AuthUser | null> {
 }
 
 export async function signOut() {
-  try {
-    await GoogleSignin.signOut();
-  } catch {
-    // Not signed in with Google — ignore.
-  }
+  await googleSignOut();
   await fbSignOut(getAuth());
 }
 

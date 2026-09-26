@@ -10,12 +10,17 @@ import {
   ThemeProvider,
 } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
+import * as WebBrowser from "expo-web-browser";
 import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 
 SplashScreen.preventAutoHideAsync();
+
+// Web: when this page loads inside the Google sign-in popup, pass the result
+// back to the opener window and close. No-op on native.
+WebBrowser.maybeCompleteAuthSession();
 
 export default function RootLayout() {
   return (
